@@ -1,9 +1,12 @@
 package pkg
 
 import (
+	"fmt"
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/kubernetes-csi/drivers/pkg/csi-common"
+	"github.com/minio/minio-go"
 	"golang.org/x/net/context"
+	"k8s.io/klog"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -11,67 +14,139 @@ import (
 
 type controllerServer struct {
 	*csicommon.DefaultControllerServer
+	minioClient *minio.Client
 }
 
-func NewControllerServer(driver *csicommon.CSIDriver) *controllerServer {
+func NewControllerServer(driver *csicommon.CSIDriver, minioClient *minio.Client) *controllerServer {
 	return &controllerServer{
 		DefaultControllerServer: csicommon.NewDefaultControllerServer(driver),
+		minioClient:             minioClient,
 	}
 }
 
+// create minio bucket
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+	// Generate desired ufile bucket name
+	volumeName := sanitizeVolumeID(req.GetName())
+	// Check arguments
+	if len(volumeName) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Missing Name in CreateVolumeRequest")
+	}
+	if req.GetVolumeCapabilities() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Missing VolumeCapabilities in CreateVolumeRequest")
+	}
+	if err := cs.Driver.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
+		klog.Infof("Invalid create volume req: %v", req)
+		return nil, err
+	}
+
+	klog.Infof("Request to create bucket volume %s", volumeName)
+
+	// todo get bucket name from parameters
+	//bucketName := req.GetParameters()["bucket"]
+	//if len(bucketName) == 0 {
+	//	return nil, status.Error(codes.Internal, "Missing bucket in parameters")
+	//}
+
+	bucketName := volumeName
+
+
+	// check bucket is exist or not
+	exist, err := cs.minioClient.BucketExists(bucketName)
+	if err != nil || exist {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check bucket volume %s: %v, or bucket has exist", bucketName, err))
+	}
+
+	// create bucket
+	err = cs.minioClient.MakeBucket(bucketName, "us-east-1")
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create bucket volume %s: %v", bucketName, err))
+
+	}
+
+	return &csi.CreateVolumeResponse{
+		Volume: &csi.Volume{
+			VolumeId: bucketName,
+			// In fact, a ufile bucket has no storage capacity limitation, we assume it as 256 TiB
+			CapacityBytes: 256 * TiB,
+			VolumeContext: req.GetParameters(),
+		},
+	}, nil
 }
 
 func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+
+	bucketName := req.GetVolumeId()
+	// Check arguments
+	if len(bucketName) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Missing VolumeId in DeleteVolumeRequest")
+	}
+
+	// check bucket is exist or not
+	exist, err := cs.minioClient.BucketExists(bucketName)
+	if err != nil || exist {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check bucket volume %s: %v, or bucket has exist", bucketName, err))
+	}
+
+	// delete bucket
+	err = cs.minioClient.RemoveBucket(bucketName)
+
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to delete bucket volume %s: %v", bucketName, err))
+
+	}
+
+	return &csi.DeleteVolumeResponse{}, nil
+
 }
 
 func (cs *controllerServer) ControllerPublishVolume(ctx context.Context, req *csi.ControllerPublishVolumeRequest) (*csi.ControllerPublishVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+	return &csi.ControllerPublishVolumeResponse{}, nil
 }
 
 func (cs *controllerServer) ControllerUnpublishVolume(ctx context.Context, req *csi.ControllerUnpublishVolumeRequest) (*csi.ControllerUnpublishVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+	return &csi.ControllerUnpublishVolumeResponse{},nil
 }
 
 func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req *csi.ValidateVolumeCapabilitiesRequest) (*csi.ValidateVolumeCapabilitiesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
-}
 
-func (cs *controllerServer) ListVolumes(ctx context.Context, req *csi.ListVolumesRequest) (*csi.ListVolumesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
-}
+	// Check arguments
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Missing VolumeId in ValidateVolumeCapabilitiesRequest")
+	}
+	if req.GetVolumeCapabilities() == nil {
+		return nil, status.Error(codes.InvalidArgument, "Missing VolumeCapabilities in ValidateVolumeCapabilitiesRequest")
+	}
 
-func (cs *controllerServer) GetCapacity(ctx context.Context, req *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
-}
+	exist, err := cs.minioClient.BucketExists(req.GetVolumeId())
+	if err != nil || exist {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check bucket volume %s: %v, or bucket has exist", req.GetVolumeId(), err))
+	}
 
-func (cs *controllerServer) CreateSnapshot(ctx context.Context, req *csi.CreateSnapshotRequest) (*csi.CreateSnapshotResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
-}
+	supportedAccessMode := &csi.VolumeCapability_AccessMode{
+		Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+	}
 
-func (cs *controllerServer) DeleteSnapshot(ctx context.Context, req *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
-}
+	for _, cap := range req.VolumeCapabilities {
+		if cap.GetAccessMode().GetMode() != supportedAccessMode.GetMode() {
+			return &csi.ValidateVolumeCapabilitiesResponse{Message: fmt.Sprintf("Unsupported AccessMode:%v", cap.AccessMode.GetMode())}, nil
+		}
+	}
 
-func (cs *controllerServer) ListSnapshots(ctx context.Context, req *csi.ListSnapshotsRequest) (*csi.ListSnapshotsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "")
+	return &csi.ValidateVolumeCapabilitiesResponse{
+		Confirmed: &csi.ValidateVolumeCapabilitiesResponse_Confirmed{
+			VolumeCapabilities: []*csi.VolumeCapability{
+				{
+					AccessMode: supportedAccessMode,
+				},
+			},
+		},
+	}, nil
 }
 
 func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
 
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Missing Volume Id in ControllerExpandVolumeRequest")
-	}
-	if req.GetCapacityRange() == nil {
-		return nil, status.Error(codes.InvalidArgument, "Missing CapacityRange in ControllerExpandVolumeRequest")
-	}
-
-	return &csi.ControllerExpandVolumeResponse{
-		CapacityBytes:         0,
-		NodeExpansionRequired: true,
-	}, nil
+	return &csi.ControllerExpandVolumeResponse{}, status.Error(codes.Unimplemented, "ControllerExpandVolume is not implemented")
 
 }
 

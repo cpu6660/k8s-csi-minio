@@ -1,2 +1,5 @@
 .idea/
+csi-minio
 vendor
+vendor-bak
+deploy/user-data.yaml

@@ -1,19 +1,19 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-ufile-node
+  name: csi-minio-node
   namespace: kube-system
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "node"
     owner: "ucloud"
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-node
+  name: csi-minio-node
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "node"
     owner: "ucloud"
 rules:
@@ -33,16 +33,16 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-node
+  name: csi-minio-node
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "node"
     owner: "ucloud"
 subjects:
   - kind: ServiceAccount
-    name: csi-ufile-node
+    name: csi-minio-node
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: csi-ufile-node
+  name: csi-minio-node
   apiGroup: rbac.authorization.k8s.io

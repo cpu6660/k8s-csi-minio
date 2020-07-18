@@ -1,15 +1,15 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: csi-ufile-controller
+  name: csi-minio-controller
   namespace: kube-system
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     owner: "ucloud"
 spec:
   selector:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     owner: "ucloud"
   ports:
@@ -19,24 +19,24 @@ spec:
 kind: StatefulSet 
 apiVersion: apps/v1
 metadata:
-  name: csi-ufile-controller
+  name: csi-minio-controller
   namespace: kube-system
 spec:
-  serviceName: "csi-ufile-controller"
+  serviceName: "csi-minio-controller"
   replicas: 1
   selector:
     matchLabels:
-      app:  "csi-ufile"
+      app:  "csi-minio"
       role: "controller"
       owner: "ucloud"
   template:
     metadata:
       labels:
-        app:  "csi-ufile"
+        app:  "csi-minio"
         role: "controller"
         owner: "ucloud"
     spec:
-      serviceAccount: csi-ufile-controller
+      serviceAccount: csi-minio-controller
       containers:
       - name: csi-provisioner
         image: uhub.service.ucloud.cn/uk8s/csi-provisioner:v1.5.0
@@ -80,18 +80,18 @@ spec:
         volumeMounts:
         - name: socket-dir
           mountPath: /csi
-      - name: csi-ufile
-        image: uhub.service.ucloud.cn/uk8s/csi-uk8s:20.07.2
+      - name: csi-minio
+        image: uhub.service.ucloud.cn/safehouse/csi-minio:1.4
         imagePullPolicy: "Always"
         args:
-        - "--drivername=ufile.csi.ucloud.cn"
+        - "--drivername=minio.csi.ucloud.cn"
         - "--endpoint=$(CSI_ENDPOINT)"
         - "--hostname=$(KUBE_NODE_NAME)"
         - "--maxvolume=100"
         - "--v=5"
         envFrom:
         - configMapRef:
-            name: uk8sconfig
+            name: minio-config
         env:
         - name: KUBE_NODE_NAME
           valueFrom:

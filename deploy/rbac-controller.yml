@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-ufile-controller
+  name: csi-minio-controller
   namespace: kube-system
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     owner: "ucloud"
 
@@ -12,9 +12,9 @@ metadata:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-provisioner
+  name: csi-minio-provisioner
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     tier: "provisioner"
     owner: "ucloud"
@@ -38,9 +38,9 @@ rules:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-attacher
+  name: csi-minio-attacher
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     tier: "attacher"
     owner: "ucloud"
@@ -64,9 +64,9 @@ rules:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-cluster-driver-registrar
+  name: csi-minio-cluster-driver-registrar
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     tier: "cluster-registrar"
     owner: "ucloud"
@@ -84,15 +84,15 @@ rules:
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-controller
+  name: csi-minio-controller
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     owner: "ucloud"
 aggregationRule:
   clusterRoleSelectors:
   - matchLabels:
-      app: "csi-ufile"
+      app: "csi-minio"
   - matchLabels:
       role: "controller"
   - matchLabels:
@@ -102,27 +102,27 @@ rules: []
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-controller
+  name: csi-minio-controller
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     owner: "ucloud"
 subjects:
   - kind: ServiceAccount
-    name: csi-ufile-controller
+    name: csi-minio-controller
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: csi-ufile-controller
+  name: csi-minio-controller
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   namespace: kube-system
-  name: csi-ufile-provisioner
+  name: csi-minio-provisioner
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     tier: "provisioner"
     owner: "ucloud"
@@ -139,20 +139,20 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-provsioner
+  name: csi-minio-provsioner
   namespace: kube-system
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     tier: "provisioner"
     owner: "ucloud"
 subjects:
   - kind: ServiceAccount
-    name: csi-ufile-controller
+    name: csi-minio-controller
     namespace: kube-system
 roleRef:
   kind: Role
-  name: csi-ufile-provisioner
+  name: csi-minio-provisioner
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: Role
@@ -160,9 +160,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   # replace with non-default namespace name
   namespace: kube-system
-  name: csi-ufile-attacher
+  name: csi-minio-attacher
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     tier: "attacher"
     owner: "ucloud"
@@ -179,20 +179,20 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-ufile-attacher
+  name: csi-minio-attacher
   namespace: kube-system
   labels:
-    app: "csi-ufile"
+    app: "csi-minio"
     role: "controller"
     tier: "attacher"
     owner: "ucloud"
 subjects:
   - kind: ServiceAccount
-    name: csi-ufile-controller
+    name: csi-minio-controller
     namespace: kube-system
 roleRef:
   kind: Role
-  name: csi-ufile-attacher
+  name: csi-minio-attacher
   apiGroup: rbac.authorization.k8s.io
 ---
 

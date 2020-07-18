@@ -44,12 +44,15 @@ func NewMinioDriver(driverName, nodeID, endpoint string, maxVolumesPerNode int64
 
 	minioDriver.Driver.AddVolumeCapabilityAccessModes([]csi.VolumeCapability_AccessMode_Mode{csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER})
 
+	// minio client
+	minioClient := NewMinioClient()
+
 	// identity server
 	minioDriver.IDServer = NewIdentityServer(minioDriver.Driver)
 	// node server
-	minioDriver.NodeServer = NewNodeServer(minioDriver.Driver)
+	minioDriver.NodeServer = NewNodeServer(minioDriver.Driver, minioClient)
 	// controller server
-	minioDriver.ControllerServer = NewControllerServer(minioDriver.Driver)
+	minioDriver.ControllerServer = NewControllerServer(minioDriver.Driver, minioClient)
 
 	return minioDriver, nil
 
@@ -65,10 +68,7 @@ func (d *MinioDriver) Run() {
 	s.Wait()
 }
 
-// todo
-// We need to perform a graceful shutdown for the gRPC server and umount PluginCSISockDir /var/lib/kubelet/plugins/udisk.csi.ucloud.cn.
-// PluginCSISockDir is mounted by hostpath with mountPropagation Bidirectional, and any volume mounts created by Containers in Pods
-// must be destroyed (unmounted) by the Containers on termination.
+
 func cleanUpOnTermination(s csicommon.NonBlockingGRPCServer) {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, os.Kill, syscall.SIGINT, syscall.SIGTERM)

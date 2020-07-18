@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	CSIDriverName = flag.String("drivername", "", "name of the driver")
 	CSIEndpoint  = flag.String("endpoint", "unix://var/run/csisocket", "CSI endpoint")
 	CSIHostName  = flag.String("hostname", os.Getenv("KUBE_NODE_NAME"), "node id")
 	CSIMaxVolume = flag.Int64("maxvolume", 100, "max volumes per node")
