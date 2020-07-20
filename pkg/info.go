@@ -8,4 +8,7 @@ const (
 
 const (
 	KiB int64 = 1024
+	MiB int64 = KiB * 1024
+	GiB int64 = MiB * 1024
+	TiB int64 = GiB * 1024
 )

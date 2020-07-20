@@ -5,18 +5,16 @@ go 1.14
 require (
 	github.com/container-storage-interface/spec v1.3.0
 	github.com/go-ini/ini v1.57.0 // indirect
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.2
-	github.com/kubernetes-csi/csi-lib-utils v0.7.0
+	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/kubernetes-csi/csi-lib-utils v0.7.0 // indirect
 	github.com/kubernetes-csi/drivers v1.0.2
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
-	golang.org/x/text v0.3.1-0.20181227161524-e6919f6577db
 	google.golang.org/grpc v1.30.0
-	google.golang.org/protobuf v1.23.0
+	gopkg.in/ini.v1 v1.57.0 // indirect
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.3.0
 	k8s.io/kubernetes v1.15.1

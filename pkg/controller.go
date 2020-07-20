@@ -26,6 +26,10 @@ func NewControllerServer(driver *csicommon.CSIDriver, minioClient *minio.Client)
 
 // create minio bucket
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+
+	fmt.Println("<<<<<<<-req-params->>>>>>>>", req.GetParameters())
+	fmt.Println("<<<<<<<-ctx->>>>>>>>>>>>>>", ctx)
+
 	// Generate desired ufile bucket name
 	volumeName := sanitizeVolumeID(req.GetName())
 	// Check arguments

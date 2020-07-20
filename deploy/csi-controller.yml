@@ -39,17 +39,18 @@ spec:
       serviceAccount: csi-minio-controller
       containers:
       - name: csi-provisioner
-        image: uhub.service.ucloud.cn/uk8s/csi-provisioner:v1.5.0
+        image: uhub.service.ucloud.cn/safehouse/csi-provisioner:1.2
         args:
         - "--csi-address=$(ADDRESS)"
         - "--enable-leader-election"
         - "--connection-timeout=30s"
+        - "--extra-create-metadata"
         - "--v=5"
         - "--timeout=600s"
         env:
         - name: ADDRESS
           value: /csi/csi.sock
-        imagePullPolicy: "Always"
+        imagePullPolicy: "IfNotPresent"
         volumeMounts:
         - name: socket-dir
           mountPath: /csi
@@ -81,7 +82,7 @@ spec:
         - name: socket-dir
           mountPath: /csi
       - name: csi-minio
-        image: uhub.service.ucloud.cn/safehouse/csi-minio:1.4
+        image: uhub.service.ucloud.cn/safehouse/csi-minio:1.6
         imagePullPolicy: "Always"
         args:
         - "--drivername=minio.csi.ucloud.cn"

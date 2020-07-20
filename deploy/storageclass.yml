@@ -5,3 +5,4 @@ metadata:
   name: csi-minio
 provisioner: minio.csi.ucloud.cn
 parameters:
+  cryptMode: "auto"
