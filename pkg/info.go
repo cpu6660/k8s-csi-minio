@@ -6,6 +6,13 @@ const (
 	PluginCSISockDir = "/var/lib/kubelet/plugins/minio.csi.ucloud.cn"
 )
 
+
+const (
+	CSI_PVC_NAME = "csi.storage.k8s.io/pvc/name"
+	CSI_PVC_NAMESPACE = "csi.storage.k8s.io/pvc/namespace"
+	CSI_PV_NAME = "csi.storage.k8s.io/pv/name"
+)
+
 const (
 	KiB int64 = 1024
 	MiB int64 = KiB * 1024

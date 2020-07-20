@@ -82,7 +82,7 @@ spec:
         - name: socket-dir
           mountPath: /csi
       - name: csi-minio
-        image: uhub.service.ucloud.cn/safehouse/csi-minio:1.6
+        image: uhub.service.ucloud.cn/safehouse/csi-minio:1.7
         imagePullPolicy: "Always"
         args:
         - "--drivername=minio.csi.ucloud.cn"

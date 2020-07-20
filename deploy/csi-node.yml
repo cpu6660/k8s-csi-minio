@@ -60,7 +60,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: uhub.service.ucloud.cn/safehouse/csi-minio:1.6
+          image: uhub.service.ucloud.cn/safehouse/csi-minio:1.7
           args :
             - "--drivername=minio.csi.ucloud.cn"
             - "--hostname=$(KUBE_NODE_NAME)"

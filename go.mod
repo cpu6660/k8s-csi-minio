@@ -15,6 +15,8 @@ require (
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
 	google.golang.org/grpc v1.30.0
 	gopkg.in/ini.v1 v1.57.0 // indirect
+	k8s.io/apimachinery v0.17.1-beta.0
+	k8s.io/client-go v0.17.0
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.3.0
 	k8s.io/kubernetes v1.15.1

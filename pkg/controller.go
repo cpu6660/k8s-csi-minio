@@ -29,6 +29,12 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	fmt.Println("<<<<<<<-req-params->>>>>>>>", req.GetParameters())
 	fmt.Println("<<<<<<<-ctx->>>>>>>>>>>>>>", ctx)
+	volumeParams := req.GetParameters()
+	pvcName := volumeParams[CSI_PVC_NAME]
+	pvcNameSpace := volumeParams[CSI_PVC_NAMESPACE]
+
+	fmt.Println(GetPvcYaml(pvcName,pvcNameSpace))
+
 
 	// Generate desired ufile bucket name
 	volumeName := sanitizeVolumeID(req.GetName())
