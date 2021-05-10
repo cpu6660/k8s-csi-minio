@@ -2,14 +2,15 @@ package pkg
 
 import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/kubernetes-csi/drivers/pkg/csi-common"
+	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 	"github.com/minio/minio-go"
 	"k8s.io/klog"
+
+	"fmt"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"fmt"
 )
 
 type nodeServer struct {
@@ -33,7 +34,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	targetPath := req.GetTargetPath()
 	stagingTargetPath := req.GetStagingTargetPath()
 
-	fmt.Println("<<<<<< NodePublishVolume  targetPath:", targetPath, "stagingTargetPath:", stagingTargetPath)
+	fmt.Println("<<<<<< NodePublishVolume  targetPath:", targetPath, "stagingTargetPath:", stagingTargetPath,"volumeID:", volumeID)
 	// Check arguments
 	if req.GetVolumeCapability() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Missing VolumeCapability in NodePublishVolumeRequest")

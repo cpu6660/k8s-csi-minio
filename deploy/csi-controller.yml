@@ -39,12 +39,12 @@ spec:
       serviceAccount: csi-minio-controller
       containers:
       - name: csi-provisioner
-        image: uhub.service.ucloud.cn/safehouse/csi-provisioner:v1.2.0
+        image: uhub.service.ucloud.cn/safehouse/csi-provisioner:v2.1.1
         args:
         - "--csi-address=$(ADDRESS)"
-        - "--enable-leader-election"
-        - "--connection-timeout=30s"
-        #- "--extra-create-metadata"
+        - "--leader-election"
+        #- "--connection-timeout=30s"
+        - "--extra-create-metadata"
         - "--v=5"
         - "--timeout=600s"
         env:

@@ -2,8 +2,9 @@ package pkg
 
 import (
 	"fmt"
+
 	"github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/kubernetes-csi/drivers/pkg/csi-common"
+	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 	"github.com/minio/minio-go"
 	"golang.org/x/net/context"
 	"k8s.io/klog"
@@ -27,13 +28,25 @@ func NewControllerServer(driver *csicommon.CSIDriver, minioClient *minio.Client)
 // create minio bucket
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 
+
+	var (
+		bucketName string 
+	)
+
+	fmt.Println("<<<<<----req------>>>>>>>>",req)
 	fmt.Println("<<<<<<<-req-params->>>>>>>>", req.GetParameters())
 	fmt.Println("<<<<<<<-ctx->>>>>>>>>>>>>>", ctx)
 	volumeParams := req.GetParameters()
 	pvcName := volumeParams[CSI_PVC_NAME]
 	pvcNameSpace := volumeParams[CSI_PVC_NAMESPACE]
 
-	fmt.Println(GetPvcYaml(pvcName,pvcNameSpace))
+	pvcYaml,err := GetPvcYaml(pvcName,pvcNameSpace)
+	if err != nil {
+		return nil,err 
+	}
+
+
+	annotationDataSet,dataSetExist := pvcYaml.Annotations["dataset"]
 
 
 	// Generate desired ufile bucket name
@@ -52,27 +65,37 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	klog.Infof("Request to create bucket volume %s", volumeName)
 
-	// todo get bucket name from parameters
-	//bucketName := req.GetParameters()["bucket"]
-	//if len(bucketName) == 0 {
-	//	return nil, status.Error(codes.Internal, "Missing bucket in parameters")
-	//}
 
-	bucketName := volumeName
+	// 如果声明了使用已经存在的dataset,就直接挂载已经存在的bucket
+	if dataSetExist && annotationDataSet != "" {
+		bucketName = annotationDataSet
+	}else {
+		bucketName = volumeName
+	}
 
 
 	// check bucket is exist or not
 	exist, err := cs.minioClient.BucketExists(bucketName)
-	if err != nil || exist {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check bucket volume %s: %v, or bucket has exist", bucketName, err))
-	}
-
-	// create bucket
-	err = cs.minioClient.MakeBucket(bucketName, "us-east-1")
 	if err != nil {
-		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create bucket volume %s: %v", bucketName, err))
-
+		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check bucket volume %s: %v", bucketName, err))
 	}
+
+
+	// if use specify dataset 
+	if dataSetExist {
+		if !exist {
+			return nil, status.Error(codes.Internal, fmt.Sprintf(" dataset   %s is not exist", bucketName))
+
+		}
+	}else {
+		// create bucket
+		err = cs.minioClient.MakeBucket(bucketName, "us-east-1")
+		if err != nil {
+			return nil, status.Error(codes.Internal, fmt.Sprintf("failed to create bucket volume %s: %v", bucketName, err))
+
+		}
+	}
+
 
 	return &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
