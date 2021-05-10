@@ -1,5 +1,7 @@
 apiVersion: v1
 kind: ServiceAccount
+imagePullSecrets:
+- name: sf-repo
 metadata:
   name: csi-minio-node
   namespace: kube-system

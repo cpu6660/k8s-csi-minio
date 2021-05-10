@@ -9,6 +9,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"fmt"
 )
 
 type nodeServer struct {
@@ -26,10 +27,13 @@ func NewNodeServer(driver *csicommon.CSIDriver, minioClient *minio.Client) *node
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
 
+	// stagingTargetPath is a global path
+
 	volumeID := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 	stagingTargetPath := req.GetStagingTargetPath()
 
+	fmt.Println("<<<<<< NodePublishVolume  targetPath:", targetPath, "stagingTargetPath:", stagingTargetPath)
 	// Check arguments
 	if req.GetVolumeCapability() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Missing VolumeCapability in NodePublishVolumeRequest")
@@ -130,6 +134,7 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	volumeID := req.GetVolumeId()
 	stagingTargetPath := req.GetStagingTargetPath()
 
+	fmt.Println("<<<<<< nodestagevolume: stagingTargetPath:", stagingTargetPath)
 	// Check arguments
 	if len(volumeID) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Missing VolumeID in NodeStageVolumeRequest")

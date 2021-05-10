@@ -94,7 +94,7 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 
 	// check bucket is exist or not
 	exist, err := cs.minioClient.BucketExists(bucketName)
-	if err != nil || exist {
+	if err != nil || !exist {
 		return nil, status.Error(codes.Internal, fmt.Sprintf("failed to check bucket volume %s: %v, or bucket has exist", bucketName, err))
 	}
 
