@@ -2,13 +2,14 @@ package pkg
 
 import (
 	"errors"
-	"github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/kubernetes-csi/drivers/pkg/csi-common"
-	"k8s.io/klog"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
+
+	"github.com/container-storage-interface/spec/lib/go/csi"
+	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
+	"k8s.io/klog"
 )
 
 type MinioDriver struct {
@@ -42,7 +43,8 @@ func NewMinioDriver(driverName, nodeID, endpoint string, maxVolumesPerNode int64
 		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
 	})
 
-	minioDriver.Driver.AddVolumeCapabilityAccessModes([]csi.VolumeCapability_AccessMode_Mode{csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER})
+	// 设置volume在node上的读写控制
+	minioDriver.Driver.AddVolumeCapabilityAccessModes([]csi.VolumeCapability_AccessMode_Mode{csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER})
 
 	// minio client
 	minioClient := NewMinioClient()

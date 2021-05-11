@@ -1,4 +1,4 @@
-IMAGE=csi-minio:1.11
+IMAGE=csi-minio:1.15
 build:
 	GOOS=linux GOARCH=amd64 go build  -o csi-minio cmd/main.go
 	docker build -t uhub.service.ucloud.cn/safehouse/${IMAGE}  .

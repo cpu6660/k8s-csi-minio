@@ -1,0 +1,29 @@
+FROM centos:7
+
+WORKDIR /opt/tool
+
+
+# install wget 
+RUN  yum install wget -y
+
+# install fuser 
+RUN  yum install -y fuse
+
+
+# install gocryptfs
+RUN wget https://github.com/rfjakob/gocryptfs/releases/download/v2.0-beta3/gocryptfs_v2.0-beta3_linux-static_amd64.tar.gz
+
+RUN  tar -zxvf gocryptfs_v2.0-beta3_linux-static_amd64.tar.gz
+
+
+RUN yum install epel-release -y 
+
+# install s3fs 
+RUN yum install s3fs-fuse -y 
+
+
+
+RUN mv gocryptfs /usr/bin/
+
+
+
