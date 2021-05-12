@@ -115,7 +115,8 @@ func (s3fs *s3fsMounter) Mount(source string, target string) error {
 		return err
 	}
 	args := []string{
-		"-passfile", "/home/.passwd-gocryptfs",
+		"-passfile",
+		fmt.Sprintf("%s/%s", os.Getenv("HOME"),".passwd-gocryptfs"),
 		source,
 		target,
 	}
