@@ -2,13 +2,13 @@ package pkg
 
 import (
 	"fmt"
-	"k8s.io/kubernetes/pkg/util/mount"
 	"os"
 	"os/exec"
 	"time"
-	"k8s.io/klog/v2"
-)
 
+	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/util/mount"
+)
 
 //mount interface
 // Mounter interface which can be implemented
@@ -66,6 +66,7 @@ type s3fsMounter struct {
 
 const (
 	CmdS3FS = "s3fs"
+	GocryptFS = "gocryptfs"
 )
 
 // todo update what minio secrets from
@@ -82,37 +83,67 @@ func newS3fsMounter(bucket string, secrets map[string]string) (Mounter, error) {
 	}, nil
 }
 
+// mount bucket to global path
 func (s3fs *s3fsMounter) Stage(stageTarget string) error {
-	return nil
-}
-
-func (s3fs *s3fsMounter) Unstage(stageTarget string) error {
-	return nil
-}
-
-func (s3fs *s3fsMounter) Mount(source string, target string) error {
+	
 	if err := writes3fsPass(s3fs.accessKeyID + ":" + s3fs.secretAccessKey); err != nil {
 		return err
 	}
 	args := []string{
 		fmt.Sprintf("%s", s3fs.bucket),
-		fmt.Sprintf("%s", target),
+		fmt.Sprintf("%s", stageTarget),
 		"-o", "use_path_request_style",
 		"-o", fmt.Sprintf("url=http://%s", s3fs.endpoint),
 		"-o", "curldbg",
 		"-o", "allow_other",
 		"-o", "mp_umask=000",
 	}
-	return fuseMount(target, CmdS3FS, args)
+	return fuseMount(stageTarget, CmdS3FS, args)
+}
+
+func (s3fs *s3fsMounter) Unstage(stageTarget string) error {
+
+	return fuseUnmount(stageTarget)
+
+}
+
+
+// mount global path to pod volume path 
+func (s3fs *s3fsMounter) Mount(source string, target string) error {
+
+	if err := writegocryptfsPass("123456"); err != nil {
+		return err
+	}
+	args := []string{
+		"-passfile", "/home/.passwd-gocryptfs",
+		source,
+		target,
+	}
+
+	// gocryptfs -passfile xxx.txt  /data /plain
+	return fuseMount(target, GocryptFS, args)
 }
 
 func writes3fsPass(pwFileContent string) error {
-	pwFileName := fmt.Sprintf("%s/.passwd-s3fs", os.Getenv("HOME"))
+
+	return writeToFile(".passwd-s3fs",pwFileContent)
+	
+}
+
+func writegocryptfsPass(password string) error {
+
+	return writeToFile(".passwd-gocryptfs",password)
+}
+
+
+func writeToFile(fileName string, content string) error {
+
+	pwFileName := fmt.Sprintf("%s/%s", os.Getenv("HOME"),fileName)
 	pwFile, err := os.OpenFile(pwFileName, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
-	_, err = pwFile.WriteString(pwFileContent)
+	_, err = pwFile.WriteString(content)
 	if err != nil {
 		return err
 	}

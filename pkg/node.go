@@ -166,7 +166,6 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 
 	return &csi.NodeStageVolumeResponse{}, nil
 
-	return nil, status.Error(codes.Unimplemented, "")
 }
 
 func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
@@ -180,6 +179,23 @@ func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 	}
 	if len(stagingTargetPath) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Missing TargetPath in NodeUnstageVolumeRequest")
+	}
+
+
+	notMnt, err := checkMount(stagingTargetPath)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if notMnt {
+		return &csi.NodeUnstageVolumeResponse{}, nil
+	}
+
+	mounter, err := newMounter(volumeID,nil)
+	if err != nil {
+		return nil, err
+	}
+	if err := mounter.Unstage(stagingTargetPath); err != nil {
+		return nil, err
 	}
 
 	return &csi.NodeUnstageVolumeResponse{}, nil
