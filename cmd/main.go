@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/cpu6660/k8s-csi-minio/pkg"
-	"k8s.io/klog"
 	"os"
 	"runtime"
+
+	"github.com/cpu6660/k8s-csi-minio/pkg"
+	"k8s.io/klog"
 )
 
 var (
@@ -28,7 +29,7 @@ func main() {
 
 	showVersion()
 
-	klog.Infof("UCloud Kubernetes CSI Driver(%v) start with args %+v, Endpoint %v, HostName %v, MaxVolume %v",
+	klog.Infof("Safehouse Kubernetes CSI Driver(%v) start with args %+v, Endpoint %v, HostName %v, MaxVolume %v",
 		pkg.CSI_DRIVER_NAME, os.Args, *CSIEndpoint, *CSIHostName, *CSIMaxVolume)
 
 	driver, err := pkg.NewMinioDriver(pkg.CSI_DRIVER_NAME, *CSIHostName, *CSIEndpoint, *CSIMaxVolume, pkg.CSI_VERSION)

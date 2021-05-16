@@ -62,7 +62,7 @@ func NewMinioDriver(driverName, nodeID, endpoint string, maxVolumesPerNode int64
 
 func (d *MinioDriver) Run() {
 
-	klog.Infof("Start UDisk CSI Driver, version: %v", CSI_VERSION)
+	klog.Infof("Start Minio CSI Driver, version: %v", CSI_VERSION)
 	s := csicommon.NewNonBlockingGRPCServer()
 	s.Start(d.Endpoint, d.IDServer, d.ControllerServer, d.NodeServer)
 	go cleanUpOnTermination(s)
